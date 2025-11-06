@@ -1,0 +1,35 @@
+CSDN源博客  https://blog.csdn.net/m0_58235748/article/details/130572035?ops_request_misc=%257B%2522request%255Fid%2522%253A%25220ffd9fe173c60eaec46109fc70dd849c%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=0ffd9fe173c60eaec46109fc70dd849c&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-2-130572035-null-null.142^v102^control&utm_term=ubuntu2004%E5%AE%89%E8%A3%85ROS%20noetic&spm=1018.2226.3001.4187
+
+
+sudo apt-get install python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+sudo apt-get install python3-rosdep
+
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' 
+或者
+sudo sh -c '. /etc/lsb-release && echo "deb http://mirrors.ustc.edu.cn/ros/ubuntu/ $DISTRIB_CODENAME main" > /etc/apt/sources.list.d/ros-latest.list'
+
+sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+
+sudo apt-get update
+
+sudo apt install ros-noetic-desktop-full
+(报错解决： apt --fix-broken install 
+  sudo dpkg -i --force-overwrite /var/cache/apt/archives/python3-rosdistro-modules_1.0.1-1_all.deb 有几个冲突文件覆盖几个
+【https://blog.csdn.net/weixin_38646896/article/details/129407848?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522a4bee6983091c01d89ab87556314f6a4%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=a4bee6983091c01d89ab87556314f6a4&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-1-129407848-null-null.142^v102^control&utm_term=E%3A%20Unmet%20dependencies.%20Try%20apt%20--fix-broken%20install%20with%20no%20packages%20%28or%20specify%20a%20solution%29.&spm=1018.2226.3001.4187】）
+  
+rosdep update
+
+echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+source ~/.bashrc
+ 
+sudo apt install python3-rosinstall python3-rosinstall-generator python3-wstool
+  验证
+source /opt/ros/noetic/setup.bash
+roscore
+
+
+
+
+
+

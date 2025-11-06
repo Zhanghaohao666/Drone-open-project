@@ -1,0 +1,51 @@
+ubuntu1804 ros melodic
+1. 添加ROS软件源
+$sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros-latest.list'
+2. 添加密钥
+$sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+3. 安装ROS
+$sudo apt update
+$sudo apt install ros-melodic-desktop-full
+4.初始化rosdep
+$sudo rosdep init  
+(遇到找不到命令 20.04终端输入 sudo apt install python3-rosdep2  18.04终端输入   sudo apt install python-rosdep）
+(遇到  Website may be down.   
+sudo gedit /etc/hosts   在文件末尾添加下面这段：
+185.199.108.133 raw.githubusercontent.com
+185.199.109.133
+185.199.110.133
+185.199.111.133
+151.101.84.133 raw.githubusercontent.com
+$ rosdep update（不行热点加加速器）
+5.设置环境变量
+$echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
+$source ~/.bashrc
+6. 安装rosinstall
+$ sudo apt install python-rosinstall python-rosinstall-generator python-wstool build-essential
+
+
+验证 
+roscore
+... logging to /home/zhanghaohao/.ros/log/2723619a-bd4c-11ef-8a91-000c29bbfbfa/roslaunch-zhh-34983.log
+Checking log directory for disk usage. This may take a while.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+
+started roslaunch server http://zhh:35985/
+ros_comm version 1.14.13
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.13
+
+
+小海龟示例
+roscore
+新终端
+rosrun turtlesim turtlesim_node
+新终端
+rosrun turtlesim turtle_teleop_key
