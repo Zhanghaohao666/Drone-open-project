@@ -1,0 +1,26 @@
+zhanghaohao@zhh:~/catkin_ws_racer$ rosnode list
+/acvrp_solver_1
+/acvrp_solver_2
+/acvrp_solver_3
+/exploration_node_1
+/exploration_node_2
+/exploration_node_3
+/map_pub
+/odom_visualization_1
+/odom_visualization_2
+/odom_visualization_3
+/pcl_render_node_1
+/pcl_render_node_2
+/pcl_render_node_3
+/poscmd_2_odom_1
+/poscmd_2_odom_2
+/poscmd_2_odom_3
+/rosout
+/rqt_gui_py_node_7269
+/rvizvisualisation
+/traj_server_1
+/traj_server_2
+/traj_server_3
+/tsp_solver_1
+/tsp_solver_2
+/tsp_solver_3

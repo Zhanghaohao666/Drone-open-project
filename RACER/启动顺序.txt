@@ -1,0 +1,40 @@
+RACER仿真运行启动顺序：
+
+exploration_manager rviz.launch   启动 rviz初始化 【rvizvisualisation】
+——>$(find exploration_manager)/config/swarm.rviz    RViz 的界面配置文件 
+
+
+swarm_exploration.launch 启动多架无人机（swarm）的协同探索任务
+——> $(find exploration_manager)/launch/single_drone_exploration.xml (启动参数文件，一个无人机一个 ）
+           ——> $(find exploration_manager)/launch/single_drone_planner.xml【主算法的入口，负责路径规划和环境探索】
+		        ——>启动主节点  node "exploration_manager"   中  exploration_node 
+                                   ——>src/exploration_node.cpp 
+                                   ——>src/fast_exploration_fsm.cpp
+                                   ——>src/fast_exploration_manager.cpp
+		        ——>启动节点  swarm_exploration/utils/lkh_mtsp_solver   mtsp_node 问题一   MTSP  单个旅行商路径规划【 tsp_solver】
+                                  ——>src2/mtsp_node.cpp       
+		        ——>启动节点  swarm_exploration/utils/lkh_mtsp_solver   mtsp_node 问题二  多个车辆任务分配路径规划【acvrp_solver】
+                                  ——>src2/mtsp_node.cpp
+	   ——>  node  pkg="plan_manage" name="traj_server_$(arg drone_id)"   plan_manage/traj_server
+                        ——> src/traj_server.cpp
+	   ——>  $(find exploration_manager)/launch/simulator_light.xml  
+                        ——>启动节点 poscmd_2_odom包中 poscmd_2_odom  将来自路径规划器的位置信息转化为无人机的里程计信息 
+                                   ——>  uav_simulator/poscmd_2_odomsrc/poscmd_2_odom.cpp
+                        ——>启动节点 odom_visualization包中 odom_visualization  可视化无人机的里程计信息
+                                   ——>  uav_simulator/Utils/odom_visualization/src/odom_visualization.cpp
+                        ——>启动节点 uav_simulator/local_sensing_node 包中 pcl_render_node  渲染深度图像和传感器数据的可视化
+                                   ——>  uav_simulator/local_sensing/src/pointcloud_render_node.cpp
+——>启动节点  uav_simulator/map_generator包中的map_pub（地图参数 $(find map_generator)/resource/pillar.pcd） 生成地图
+           ——> src/map_publisher.cpp
+以上包括节点：
+exploration_manager 中 exploration_node    一个无人机一个    主算法的入口，负责路径规划和环境探索     
+map_pub         一共一个                             生成地图                                                                                             
+poscmd_2_odom                                       将来自路径规划器的位置信息转化为无人机的里程计信息                 
+odom_visualization     一个无人机一个     可视化无人机的里程计信息                                                                
+rvizvisualisation   一共一个                        RViz 的界面初始化，配置                                                                  
+pcl_render_node   一个无人机一个            渲染深度图像和传感器数据的可视化                                                  
+traj_server      一个无人机一个                    轨迹规划服务器节点                                                                           
+acvrp_solver  一个无人机一个                   多个车辆任务分配路径规划                                                                  
+tsp_solver  一个无人机一个                        单个旅行商问题路径规划
+
+消息定义   

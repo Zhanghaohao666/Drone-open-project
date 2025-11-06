@@ -1,0 +1,97 @@
+多机器人协同探索策略 RACER 主要是由作者之前的单无人机探索工作 FUEL 进一步扩展而来，FUEL工作可以主要理解为: 基于边界信息驱动，建立分层规划结构，驱动无人机对未知环境进行考虑视点和动力学约束的高效探索。首先构造TSP问题建立单无人机的全局路径，并对该路径基于视点优化(考虑信息增益)，B样条曲线优化(考虑动力学)，在单机器人可以进行规划的前提下，RACER提出了多机器人协同探索方法。
+
+多机器人协同探索方法的关键点为：
+
+1. 如何对未知环境的探索作为任务进行量化?
+2. 如何将量化之后的任务合理分配给每一个无人机执行(考虑哪些指标，约束项是什么)?
+3. 无人机集群是中心化的还是去中心化的?
+4. 如果是中心化的，单个无人机和中心计算机之间的通信需要传输哪些信息，带宽如何设置，通信延时如何考虑，
+   信号丢失怎么办?
+5. 如果是去中心化的，每一次是几个无人机之间进行通讯?
+6. 如果是去中心化的，无人机之间怎样防止相互碰撞?
+7. 如果是去中心化的，怎么样进行最开始的任务分配?怎么样将所有无人机的任务分配问题给分解为可以两两之间
+   进行解决的子问题?
+8. 如果是去中心化的，是否所有的无人机都需要维护一张全局地图?
+9. 如果全部需要维护一张全局地图的话，那么如果另外一个无人机传过来的地图与自己的不匹配，自己将如何处理?
+   如何再传给下一个?
+10. 如果是去中心化的，无人机是否需要大概地预估其他无人机所在的位置?
+（https://zhuanlan.zhihu.com/p/626545306）
+
+快速启动
+source devel/setup.bash && roslaunch exploration_manager rviz.launch
+source devel/setup.bash && roslaunch exploration_manager swarm_exploration.launch
+
+
+rviz.launch
+启动 Rviz 的文件，配置文件的路径【 $(find exploration_manager)/config/swarm.rviz】，预定义可视化内容（如地图、点云、UAV 路径等），属于 RViz 的界面配置文件，配置 RViz 的界面布局和显示参数，为多无人机协同任务的可视化提供支持，包含规划轨迹、位置命令以及其他相关数据的显示配置。
+
+swarm_exploration.launch
+整体结构：
+用于启动多架无人机（swarm）的协同探索任务。
+文件中设置了：
+地图参数：
+地图尺寸：通过 map_size_x, map_size_y, map_size_z 参数指定地图的尺寸。
+地图加载：调用了 map_generator 包中的 map_pub 节点，加载了地图文件（pillar.pcd 或其他预定义地图）。
+无人机参数：
+设置了无人机数量 (drone_num)，并分别初始化各无人机的起始位置、ID 和其他参数。
+每个无人机通过 single_drone_exploration.xml 文件启动对应节点，表明它们的行为是通过单独配置文件定义的。
+
+
+map_generator 
+负责生成或加载仿真地图的模块，通过 args="$(find map_generator)/resource/pillar.pcd" 指定地图文件。
+地图文件类型为 .pcd（点云数据格式），用于表示 3D 空间中的障碍物、地形等。
+
+
+exploration_manager
+exploration_manager 提供多无人机探索管理功能，支持：根据地图约束规划无人机的探索路径，管理无人机之间的协同行为（避免碰撞、分区探索等）。
+关键配置：
+每个无人机由 single_drone_exploration.xml 文件启动，通过参数 init_x, init_y, init_z 定义无人机初始位置，支持动态调整地图尺寸、无人机数量等参数，便于不同仿真场景的设置。
+
+single_drone_exploration.xml
+配置并启动一个单一无人机实例的相关模块。这是实现多无人机协同探索的基础模板，这些参数定义了无人机的 ID（drone_id）、总数量（drone_num），以及初始位置信息和地图尺寸等关键属性。
+参数定义了无人机的 ID（drone_id）、总数量（drone_num），以及初始位置信息和地图尺寸等关键属性，默认值为单无人机场景，适用于调试，odom_prefix 参数用于多无人机通信中的命名空间管理，确保不同无人机的消息不冲突。
+
+
+single_drone_planner.xml
+主算法的入口，负责路径规划和环境探索，参数 depth_topic 和 cloud_topic 分别关联深度图像和点云数据，确保无人机能够从感知模块获取环境信息，相机内参（cx, cy, fx, fy）用于点云生成或 SLAM 算法。
+
+local_sensing
+作用：
+模拟无人机的本地传感能力（如激光雷达、深度相机、IMU）。
+生成无人机所能感知的环境信息，用于路径规划和地图更新。
+
+
+poscmd_2_odom
+作用：
+将无人机的目标位置命令（Position Command）转换为里程计数据（Odometry）。
+
+
+so3_disturbance_generator
+作用：
+模拟无人机在飞行过程中受到的外界扰动（如风力、碰撞）。
+
+so3_quadrotor_simulator
+作用：
+无人机四旋翼动力学仿真，结合SO(3)模型进行高精度模拟。、
+
+ Utils
+作用：
+提供一些通用的工具函数或脚本，供其他模块调用。
+
+single_drone_planner.xml
+路径规划算法， 有关单个无人机路径规划算法的配置 
+
+pkg="plan_manage" 
+该节点是路径规划的核心部分，管理无人机的运动轨迹和目标位置。
+
+$(find exploration_manager)/launch/simulator_light.xml
+仿真：if="$(arg simulation)"> 如果启用了仿真模式（simulation=true），则加载该仿真文件。
+该文件配置了仿真环境中无人机的初始位置、地图大小和里程计
+
+swarm_exploration/utils/lkh_mtsp_solver
+求解多目标旅行商问题（MTSP） 问题的一个模块,[LKH（Lin-Kernighan-Helsgaun）是一个常用于求解旅行商问题（TSP）的启发式算法
+problem_id="1": 这个节点用于求解 TSP（旅行商问题，Traveling Salesman Problem）或与 TSP 相关的任务问题。这是一个常见的优化问题，目标是在多个位置之间找到一条最短路径；
+problem_id="2": 这个节点的任务是求解 ACVRP（最优路径覆盖问题，Asymmetric Capacitated Vehicle Routing Problem）。与 TSP 类似，ACVRP 是一个优化问题，但它还涉及约束（如容量约束）和方向（非对称）。
+
+swarm_exploration文件夹 
+1. active_perception 

@@ -1,0 +1,112 @@
+swarm_exploration
+exploration_manager             探索任务总管理模块
+plan_manage                          管理映射以及路径规划的模块
+path_searching                       路径搜索,生成可行的路径规划方案
+active_perception                   环境的感知和分析（如感知Frontier，动态地生成视角点，以优化路径规划和探索策略）
+plan_env                                  构建管理规划环境地图
+bspline                                     B 样条轨迹类
+bspline_opt                             B样条轨迹优化器
+traj_utils                                  可视化路径规划，轨迹
+traj_utils                                  生成和处理多项式轨迹，生成平滑符合物理约束的轨迹
+utils                                          tsp旅行商问题，acvrp多个车辆任务分配 工具包
+bag                                           编写脚本文件去记录系统运行过程中各个话题的数据到.bag文件
+
+uav_simulator                
+map_generator                         负责生成或加载仿真地图的总模块
+local_sensing                            模拟无人机的本地传感能力，生成无人机所能感知的环境信息
+poscmd_2_odom                      无人机目标位置姿态信息转换为里程计数据
+so3_disturbance_generator     模拟无人机在飞行过程中受到的外界扰动
+so3_quadrotor_simulator         无人机四旋翼动力学仿真，结合SO(3)模型进行高精度模拟
+Utils                                            模拟仿真所用工具包
+
+
+节点map_pub【 uav_simulator/map_generator   map_publisher.cpp 】  
+将点云数据发布到 /map_generator/global_cloud 话题，消息类型为 sensor_msgs::PointCloud2
+
+pcl_render_node   【uav_simulator/local_sensing      有CUBA加速   pcl_render_node.cpp  或者
+无CUBA加速  pointcloud_render_node.cpp】     
+（1）订阅接收/map_generator/global_cloud 地图话题信息     <remap from="~global_map" to="/map_generator/global_cloud"/>，并将其从 ROS 格式转换为 PCL 点云格式并发布出去  sensor_msgs::PointCloud2 ROS 消息类型  ——>  pcl::PointCloud  PCL 库（C++ 点云处理库）
+（2）同时订阅接收里程计信息，并将其转化为相机在世界坐标系中的姿态和位置。通过里程计数据更新相机到世界坐标系的变换矩阵 cam2world，并计算出相机在世界坐标系下的位置。
+（3）定时发布相机在世界坐标系中的姿态和位置。它将相机位置和姿态封装为 geometry_msgs::PoseStamped 消息并发布。
+（4）渲染深度图。它通过相机的 cam2world 变换矩阵，将全局地图中的每个点云点投影到图像平面上，计算每个像素的深度值，并更新深度图 depth_mat。计算过程中，检查了投影点是否在图像边界内以及深度值是否合理，并且定时更新深度图。
+
+
+exploration_node  【swarm_exploration/exploration_manager   exploration_node.cpp ，fast_exploration_fsm.cpp
+  fast_exploration_manager.cpp】
+初始化exploration_node节点，并定义且创建FastExplorationFSM对象
+
+FastExplorationFSM
+【
+订阅了一个目标位置（/move_base_simple/goal），当用户通过某种方式设定目标时，触发任务开始；订阅了无人机的里程计数据（/odom_world），用于获取无人机的位置信息，处理 ROS /odom_world 里程计消息。
+
+发布 <std_msgs::Empty>("/planning/replan", 10)<std_msgs::Empty>("/planning/new", 10)用于发布重新规划和新任务的信号，触发探索模块重新规划路径，<bspline::Bspline>("/planning/bspline", 10) 发布 B 样条轨迹，用于指导无人机的轨迹规划
+
+定义无人机协作的 ROS 相关成员：
+发布器：这些发布器用于发送无人机状态、配对优化消息、轨迹信息等给其他无人机或模块。ros::Publisher drone_state_pub_, opt_pub_, opt_res_pub_, swarm_traj_pub_, grid_tour_pub_, hgrid_pub_;
+订阅器：用于接收其他无人机或模块发送的状态、优化结果等信息。
+ros::Subscriber drone_state_sub_, opt_sub_, opt_res_sub_, swarm_traj_sub_;
+定时器：定时发送和更新协作信息，例如无人机状态和轨迹。
+ros::Timer drone_state_timer_, opt_timer_, swarm_traj_timer_;
+
+FSMCallback 状态调度函数  EXPL_STATE [  INIT, WAIT_TRIGGER, PLAN_TRAJ, PUB_TRAJ, EXEC_TRAJ, FINISH, IDLE   ]
+callExplorationPlanner 路径规划函数 ：需要避开碰撞或回到起始位置【即有目标点】，调用 planTrajToView 函数来重新规划路径，只考虑路径的重新规划（避免碰撞或回到目标位置）；如果不需要避开碰撞或回到起始位置，正常执行 planExploreMotion 进行全面的规划，之后并将规划结果（包括位置、速度、加速度和 yaw）转换为 bspline (平滑，连续）轨迹格式；之后用bspline_pub_.publish(fd_->newest_traj_)swarm_traj_pub_.publish(fd_->newest_traj_)  发布轨迹   {bspline_pub_ = nh.advertise<bspline::Bspline>("/planning/bspline", 10);swarm_traj_pub_ = nh.advertise<bspline::Bspline>("/planning/swarm_traj_send", 100);}
+
+planTrajToView使用 A* 算法进行路径规划 planner_manager_->path_finder_->search（），路径优化 shortenPath(ed_->path_next_goal_);
+ed_->kino_path_.clear()，之后进行运动学运动规划 ：如果目标点距离较近，直接使用 基于方式点的优化（即规划经过几个关键点的路径），无需进行复杂的运动学路径规划planner_manager_->planExploreTraj；如果目标点较远，则选择在几何路径上选取一个中间目标，以避免路径出现死角或不可达的情况。这个过程中会生成一条新的路径，并进行路径规划vector<Eigen::Vector3d> truncated_path = { ed_->path_next_goal_.front() };如果目标距离适中，使用 运动学路径规划（如 kinodynamicReplan）来精确地计算路径，确保无人机能够根据运动学约束完成路径规划，planner_manager_->kinodynamicReplan(pos, vel, acc, ed_->next_goal_, Vector3d(0, 0, 0), time_lb);
+
+callExplorationPlanner进行全局和局部探索路径规划，根据当前的无人机位置、速度、加速度和航向等信息，确定一个新的目标点 next_pos 和目标航向 next_yaw，并将其用于路径规划，规划过程分为以下几个阶段：计算全局巡航路径（寻找一个有效的目标），计算局部路径规划（选择合适的下一个视点或目标），使用路径规划函数 planTrajToView 来生成最终的轨迹。
+
+
+SafetyCallback 执行路径时检查是否发生碰撞（planner_manager_->checkTrajCollision），如果发生碰撞，系统会发出警告，并进入路径重新规划状态（PLAN_TRAJ）
+
+类之间关系  FastExplorationFSM ——> FastExplorationManager——> FastPlannerManager
+                              expl_fsm                             expl_manager_                      planner_manager_
+
+
+FastExplorationFSM:
+  shared_ptr<FastPlannerManager> planner_manager_;
+  shared_ptr<FastExplorationManager> expl_manager_;
+  shared_ptr<PlanningVisualization> visualization_;
+  shared_ptr<FSMParam> fp_;
+  shared_ptr<FSMData> fd_;
+  EXPL_STATE state_;
+
+ FastExplorationManager
+  shared_ptr<ExplorationData> ed_;
+  shared_ptr<ExplorationParam> ep_;
+  shared_ptr<FastPlannerManager> planner_manager_;
+  shared_ptr<FrontierFinder> frontier_finder_;
+  shared_ptr<HGrid> hgrid_;
+  shared_ptr<SDFMap> sdf_map_;
+  shared_ptr<EDTEnvironment> edt_environment_;
+
+FastPlannerManager    包括管理规划算法，包括运动学重规划、探索轨迹规划、全局轨迹规划和碰撞检测等
+  PlanParameters pp_;
+  LocalTrajData local_data_;
+  GlobalTrajData global_data_;
+  MidPlanData plan_data_;
+  EDTEnvironment::Ptr edt_environment_;
+  unique_ptr<Astar> path_finder_;
+  unique_ptr<KinodynamicAstar> kino_path_finder_;
+  unique_ptr<TopologyPRM> topo_prm_;
+  SwarmData swarm_traj_data_;  // Data added for swarm trajectory planning
+  shared_ptr<SDFMap> sdf_map_;
+  vector<BsplineOptimizer::Ptr> bspline_optimizers_;
+  unique_ptr<FrontierFinder> frontier_finder_;
+  unique_ptr<HeadingPlanner> heading_planner_;
+  unique_ptr<VisibilityUtil> visib_util_;
+】
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
