@@ -1,0 +1,45 @@
+1 VINS技术   视觉惯性导航系统，结合了 视觉传感器 和 惯性传感器 的数据，提供高精度的定位与姿态估计，尤其适用于 GPS 信号弱或完全缺失的环境
+
+2.  Ego-planner 高效的单/多旋翼无人机轨迹规划器，使用基于优化的方法，能够在复杂环境中生成平滑、安全的轨迹。后继版本是 EGO-Swarm。
+https://github.com/ZJU-FAST-Lab/ego-planner
+
+
+3. Ego-Swarm    多无人机集群设计的分布式自适应运动规划算法，主要用于多无人机的协同导航与避障。它通过引入“自我感知”（Ego-centric Perception）和“分布式优化”理念，解决了无人机集群在动态复杂环境中执行任务时的多约束问题，如避障、路径规划和队形保持。  浙大
+
+
+4. FC-Planner  基于前沿的路径规划算法，尤其是探索和覆盖任务
+https://github.com/HKUST-Aerial-Robotics/FC-Planner     港科
+
+
+ 5. CoVINS   协同视觉惯性导航系统 (Collaborative Visual-Inertial Navigation System)，专注于多机器人或多无人机之间的协同定位与地图构建。可扩展的视觉惯性协同 SLAM 系统。允许多个代理同时共同定位和联合建图。它提供一个服务器后端来处理多个代理的 VIO 数据。它是通过在视觉惯性导航系统 (VINS) 的基础上，加入协同机制实现的     苏黎世联邦理工大学
+https://github.com/VIS4ROB-lab/covins  
+
+
+6. D2SLAM 是一种结合了深度学习和视觉惯性传感器（IMU）数据的 SLAM 系统，专门为解决动态环境中的定位与建图问题而设计。它通过深度学习对动态物体的检测与去除，结合稠密地图构建和多传感器融合，提升了传统 SLAM 系统在复杂和动态环境中的鲁棒性。
+ https://github.com/HKUST-Aerial-Robotics/D2SLAM
+
+
+7. GVP-MREP（Geometric Viewpoint Planner for Multi-Robot Exploration and Pathfinding） 是一种多机器人探索和路径规划算法，旨在通过几何视点规划（Geometric Viewpoint Planning）方法实现高效的未知环境探索。GVP-MREP 将探索任务分解为视点选择和路径规划两个关键步骤，通过协作优化各机器人的任务分配和路径生成，提高探索效率。
+https://github.com/NKU-MobFly-Robotics/GVP-MREP    南开 
+
+8. RACER  是一种多无人机协同探索算法，旨在实现快速高效的无人机集群在未知环境中的探索任务。
+
+9. Omni-Swarm 是一种基于去中心化控制的全向（Omnidirectional）视觉-惯性-超宽带（Visual-Inertial-UWB）状态估计系统，专为多无人机协作任务设计，旨在提高多无人机系统的定位精度和鲁棒性。该系统结合了视觉（Visual）、惯性测量单元（IMU）和超宽带（UWB）传感器的优势，在多机协作中的定位和导航中提供更高的精度和鲁棒性，尤其适用于没有GPS信号或信号不稳定的环境。  港科大
+https://github.com/HKUST-Aerial-Robotics/Omni-swarm
+
+10.VINS-MONO  高鲁棒性、多功能的单目视觉惯性状态估计器。它使用基于优化的滑动窗口，具有高效的 IMU 预积分、自动初始化、在线外参校准和闭环检测功能。  https://github.com/HKUST-Aerial-Robotics/VINS-Mono
+
+11. VINS-Fusion  是一个多传感器视觉-惯性导航系统（Visual-Inertial Navigation System, VINS），旨在提供高精度的定位与建图能力，特别是在动态和复杂环境中。它是 VINS（视觉惯性导航系统）的一个扩展版本，专注于多传感器的融合（如视觉、惯性测量单元 IMU、激光雷达、GPS 等），以实现更强的鲁棒性和更高的定位精度。 VINS 和 VINS-Fusion 的区别：VINS 主要依赖视觉和惯性传感器（IMU）的数据融合。
+VINS-Fusion 则支持更多类型的传感器，如激光雷达、GPS、磁力计等，可以同时融合多种传感器的数据，提升定位和建图的精度与鲁棒性。 
+https://github.com/HKUST-Aerial-Robotics/VINS-Fusion  港科大
+
+12. 无人机单机探索FUEL  https://github.com/HKUST-Aerial-Robotics/FUEL
+
+13. NAVRL 强化学习导航	基于强化学习 (RL) 的安全导航框架，旨在使机器人在动态环境中安全飞行，可以扩展到采用基于速度控制系统的任何机器人。	
+https://github.com/Zhefan-Xu/NavRL
+
+14. YOPO 端到端导航 You Only Plan Once（你只规划一次）：一个基于学习的四旋翼规划器，将感知、建图、前端路径搜索和后端优化集成到一个网络中，具有快速推理速度（毫秒级）。
+https://github.com/TJU-Aerial-Robotics/YOPO
+
+
+
