@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<robot name="husky" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find husky_description)/urdf/husky.urdf.xacro" />
+
+  <link name="marker_link">
+    <visual>
+      <cast_shadows>true</cast_shadows>
+      <geometry>
+        <mesh filename="package://uav_landing/models/husky/meshes/marker.dae" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://uav_landing/models/husky/meshes/marker.dae" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="marker_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="marker_link" />
+    <origin xyz="-0.02 0 0.36" rpy="0 0 0" />
+  </joint>
+</robot>

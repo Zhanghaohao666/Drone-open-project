@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<launch>
+  <include file="$(find px4)/launch/mavros_posix_sitl.launch">
+    <arg name="x" value="1" />
+    <arg name="y" value="-1" />
+    <arg name="z" value="0.1" />
+    <arg name="Y" value="0" />
+    <arg name="sdf" default="$(find easondrone_gazebo)/models/drone/iris_d435i_mid360/iris_d435i_mid360.sdf"/>
+    <arg name="gui" value="true"/>
+    <arg name="paused" value="false"/>
+  </include>
+
+  <include file="$(find easondrone_gazebo)/launch/transform.launch"/>
+</launch>
